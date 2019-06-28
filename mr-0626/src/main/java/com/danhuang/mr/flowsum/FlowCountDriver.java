@@ -9,6 +9,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+/**
+ * 统计手机的上行和下行流量 样本为input2
+ */
 public class FlowCountDriver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
