@@ -12,6 +12,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+/**
+ * 设置切割的分片 样本input4
+ */
 public class NLineDriver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
