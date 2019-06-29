@@ -11,6 +11,7 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
 
+//自定义fileinputformat，样本为input5
 public class SequenceFileDriver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 

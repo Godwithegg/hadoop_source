@@ -1,4 +1,4 @@
-package com.danhuang.mr.wordcount;
+package com.danhuang.mr.combinerwordcount;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -12,12 +12,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * 统计单词数 样本为input1
+ * 统计单词数,使用combiner减少网络传输 样本为input9
  */
 public class WordCountDriver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
-        args = new String[]{"./src/main/resources/input1","./src/main/resources/output1"};
+        args = new String[]{"./src/main/resources/input9","./src/main/resources/output9"};
         Configuration conf = new Configuration();
         //1.获取Job对象
         Job job = Job.getInstance(conf);
@@ -28,6 +28,10 @@ public class WordCountDriver {
         //3.关联Map和Reduce类
         job.setMapperClass(WordCountMapper.class);
         job.setReducerClass(WordCountReducer.class);
+
+//        job.setCombinerClass(WordCountCombiner.class);
+        //由于WordCountCombiner和WordCountReducer实现一样因此可以改为
+        job.setCombinerClass(WordCountReducer.class);
 
         //4.设置mapper阶段输出数据的key和value类型
         job.setMapOutputKeyClass(Text.class);

@@ -1,4 +1,4 @@
-package com.danhuang.mr.flowsum;
+package com.danhuang.mr.partitionersort;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -9,27 +9,28 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-/**
- * 统计手机的上行和下行流量 样本为input2
- */
-public class FlowCountDriver {
-    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+public class FlowCountSortDriver {
 
-        args = new String[]{"./src/main/resources/input2","./src/main/resources/output2"};
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        args = new String[]{"./src/main/resources/input8","./src/main/resources/output8"};
         Configuration conf = new Configuration();
         //1.获取job对象
         Job job = Job.getInstance(conf);
 
         //2.设置jar的路径
-        job.setJarByClass(FlowCountDriver.class);
+        job.setJarByClass(FlowCountSortDriver.class);
 
         //3.关联mapper和reducer
-        job.setMapperClass(FlowCountMapper.class);
-        job.setReducerClass(FlowCountReducer.class);
+        job.setMapperClass(FlowCountSortMapper.class);
+        job.setReducerClass(FlowCountSortReducer.class);
+
+        //关联分区
+        job.setPartitionerClass(ProvincePartitioner.class);
+        job.setNumReduceTasks(5);
 
         //4.设置mapper输出的key和value类型
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(FlowBean.class);
+        job.setMapOutputKeyClass(FlowBean.class);
+        job.setMapOutputValueClass(Text.class);
 
         //5.设置最终输出的key和value类型
         job.setOutputValueClass(Text.class);
