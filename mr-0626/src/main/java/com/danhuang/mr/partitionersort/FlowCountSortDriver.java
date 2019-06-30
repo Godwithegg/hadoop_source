@@ -9,6 +9,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+//按手机号进行分区排序 样本数input8
 public class FlowCountSortDriver {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
