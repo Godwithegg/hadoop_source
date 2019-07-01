@@ -1,0 +1,15 @@
+自己根据官方理解的，不一定很标准
+yarn工作机制：
+	mr程序提交到客户端所在的节点，客户端向resourcemanager申请一个application，
+	application资源提交到路径hdfs：//..以及aplication_id
+	然后节点开始提交job到该路径，提交相应的job切片信息，jobxml配置信息以及jar包
+	资源提交完毕后，想resourcemanager申请运行mrappmaster
+	resourcemanager将用户的请求初始化成一个task，resourcemanager将该任务放入调度队列中
+	等到队列中轮到该task执行的时候，空闲的nodemanager将领取该task任务
+	该nodemanager将创建container，启动mrappmaster，根据切片信息决定开启一个maptask
+	再次申请运行maptask容器，让其他nodemanger领取剩下的maptask任务
+	等到所有的maptask准备就绪之后，让mrappmaster发送程序启动脚本，让所有的maptask开始进行独立的运算
+	所有的maptask运行之后让他们把结果分好序写在磁盘上，等待reducer的处理（这里我们假定reduce设置了两个分区）
+	reducer向rm申请两个容器，运行reducetask程序，拿到相应的容器之后开启reducetask
+	reduce对应的数据来源就是maptask对应的分区的数据
+	运行完程序之后，mr会向rm注销自己
