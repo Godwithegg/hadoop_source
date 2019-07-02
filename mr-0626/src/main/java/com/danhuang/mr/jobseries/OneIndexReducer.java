@@ -7,21 +7,23 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-public class OneIndexReducer extends Reducer<Text, IntWritable,Text,NullWritable> {
+public class OneIndexReducer extends Reducer<Text, IntWritable,Text,IntWritable> {
 
-    Text k = new Text();
     IntWritable v = new IntWritable();
 
     @Override
     protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
 
-        String line = key.toString();
-        String[] fields = line.split("--");
+
+        //1.累加求和
         int sum = 0;
         for(IntWritable value:values){
             sum += value.get();
         }
-        k.set(fields[0] + "\t" +fields[1] + "-->" + sum);
-        context.write(k, NullWritable.get());
+
+        v.set(sum);
+
+        //2.写出
+        context.write(key, v);
     }
 }
