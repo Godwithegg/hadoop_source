@@ -1,0 +1,43 @@
+yarn工作机制：
+	mr程序提交到客户端所在的节点，客户端向resourcemanager申请一个application，
+	application资源提交到路径hdfs：//..以及aplication_id
+	然后节点开始提交job到该路径，提交相应的job切片信息，jobxml配置信息以及jar包
+	资源提交完毕后，想resourcemanager申请运行mrappmaster
+	resourcemanager将用户的请求初始化成一个task，resourcemanager将该任务放入调度队列中
+	等到队列中轮到该task执行的时候，空闲的nodemanager将领取该task任务
+	该nodemanager将创建container，启动mrappmaster，根据切片信息决定开启一个maptask
+	再次申请运行maptask容器，让其他nodemanger领取剩下的maptask任务
+	等到所有的maptask准备就绪之后，让mrappmaster发送程序启动脚本，让所有的maptask开始进行独立的运算
+	所有的maptask运行之后让他们把结果分好序写在磁盘上，等待reducer的处理（这里我们假定reduce设置了两个分区）
+	reducer向rm申请两个容器，运行reducetask程序，拿到相应的容器之后开启reducetask
+	reduce对应的数据来源就是maptask对应的分区的数据
+	运行完程序之后，mr会向rm注销自己
+	
+HDFS的写数据流程：
+	客户端将客户端上面的200M数据上传到集群上
+	首先是建立一个客户端对象，它会创建一个分布式文件系统
+	这个对象首先向namenode请求上传文件
+	namenode检查该路径有没有该文件等其他情况，如果有则直接报异常，如果没有则允许上传，如果有则直接报异常，如果没有则允许上传
+	然后客户端对象请求上传第一个block，请求返回datanode
+	namenode经过计算，返回datanode1，datanode2，datanode3节点，表示采用这三个节点存储数据
+	之后客户端向datanode请求建立传输通道
+	这些datanode向客户端对象应答成功
+	然后客户端开始向这些datanode传输数据
+	所有数据都传输完毕之后告诉namenode所有的数据都传输完成
+	
+HDFS的读数据流程：
+	客户端创建一个客户端对象，来操作集群
+	首先它请求下载namenode上的文件
+	namenode返回目标文件的元数据，告诉客户端在哪些节点上面读数据
+	然后客户端就会创建相应的输入流，开始向节点读数据（距离最近原则）
+	读到第一个节点的数据时候返回，然后读下一个节点的数据，直到所有要访问的文件数据
+	
+NameNode工作机制：
+	首先namenode一启动，它要加载编辑文件(edit_inprogress_001存储元数据的操作命令)和镜像文件(fsimage存储的是元数据)到内存中
+	然后客户端开始对集群进行增删改的操作，比如要上传一个文件
+	然后namenode就把这个命令记录在编辑日志里面，然后再更新内存中的数据
+	期间secondary namenode会向namenode请求是否需要检查点，触发条件是（定时时间到了或者编辑日志文件的数据满了，比如达到了100万条）
+	如果满足了，namenode就会滚动正在编写的编辑文件，然后创建一个空的编辑文件（方便新的命令写入）
+	secondary namenode会将编辑文件和镜像文件拷贝过来，然后加载到内存中合并
+	更新完毕后生成新的镜像文件，然后拷贝回namenode
+	namenode将其更新为镜像文件加载到内存中
