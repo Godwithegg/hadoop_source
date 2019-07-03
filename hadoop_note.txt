@@ -41,3 +41,34 @@ NameNode工作机制：
 	secondary namenode会将编辑文件和镜像文件拷贝过来，然后加载到内存中合并
 	更新完毕后生成新的镜像文件，然后拷贝回namenode
 	namenode将其更新为镜像文件加载到内存中
+	
+MapReduce详细工作流程：map阶段
+	首先假设有200M的待处理文件
+	在提交之前获取处理新数据的信息（切片信息），根据配置形成一个任务规划
+	然后客户端就提交信息，包括切片信息，jar包和xml信息（本地运行不需要提交jar包）
+	提交完之后由yarn调用resourcemanager创建一个Mr appmaster
+	Mr appmaster根据yarn提交的信息计算出maptask数量，启动需要的MapTask
+	启动两个MapTask分别执行所需要的任务
+	启动完之后客户端开始读取MapTask的数据，默认是TextInputformat
+	计算后写出，进入环形缓冲区（默认大小100M），左侧写key value数据，右侧写索引
+	环形缓冲区数据写到80%的时候会将数据写入磁盘，然后反向继续写数据
+	进入环形缓冲区后先分区，对分区内进行排序（字典顺序进行快排），然后溢写到磁盘（序列化）
+	最后对磁盘中的每一个分区数据进行归并排序
+	
+	reduce阶段：
+	所有的maptask任务完成后，启动相应数量的reducetask（就看有多少个分区）
+	然后reducetask分别处理相应分区的数据
+	最后进行归并排序汇总到一个有序的大文件
+	然后通过ouputformat往外面写
+	
+	
+MapTask工作机制（其实加上reducetask就是上述mapreduce工作流程）：
+	分为Read阶段 Map阶段 Collect阶段 溢写阶段 Combine阶段
+	
+	
+Shuffle机制：
+	map方法之后进入环形缓冲区，写入kv数据，到80%之后反向溢写
+	之后再往环形缓冲区内写数据时先进行分区
+	分区之后在溢写之前对分区内进行排序
+	然后溢写到磁盘上，进行归并排序合成一个大的有序的文件
+	之后还可以进行合并，压缩，然后写到磁盘上等待reduce来读
