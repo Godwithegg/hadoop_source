@@ -1,4 +1,4 @@
-package com.danhuang;
+package com.danhuang.test;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
