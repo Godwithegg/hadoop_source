@@ -1,0 +1,125 @@
+package cn.ffcs;
+
+import org.apache.commons.codec.binary.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
+
+import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+
+/**
+ * 对称加密算法DES工具类
+ * @author JRed
+ *
+ */
+public class DESUtil {
+
+	public final static String DES_KEY = "k38d81C!@#dkro22232JAMDGIJGDSe48dk>KUY%%$";
+	// 算法名称
+	public static final String KEY_ALGORITHM = "DES";
+	// 算法名称/加密模式/填充方式
+	// DES共有四种工作模式-->>ECB：电子密码本模式、CBC：加密分组链接模式、CFB：加密反馈模式、OFB：输出反馈模式
+	public static final String CIPHER_ALGORITHM = "DES/ECB/ISO10126Padding";
+
+	/**
+	 *   
+	 * 生成密钥key对象
+	 * @param keyStr 密钥字符串
+	 * @return 密钥对象 
+	 * @throws InvalidKeyException   
+	 * @throws NoSuchAlgorithmException   
+	 * @throws InvalidKeySpecException   
+	 * @throws Exception 
+	 */
+	private static SecretKey keyGenerator(String keyStr) throws Exception {
+		byte input[] = HexString2Bytes(keyStr);
+		DESKeySpec desKey = new DESKeySpec(input);
+		// 创建一个密匙工厂，然后用它把DESKeySpec转换成
+		SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
+		SecretKey securekey = keyFactory.generateSecret(desKey);
+		return securekey;
+	}
+
+	private static int parse(char c) {
+		if (c >= 'a')
+			return (c - 'a' + 10) & 0x0f;
+		if (c >= 'A')
+			return (c - 'A' + 10) & 0x0f;
+		return (c - '0') & 0x0f;
+	}
+
+	// 从十六进制字符串到字节数组转换
+	public static byte[] HexString2Bytes(String hexstr) {
+		byte[] b = new byte[hexstr.length() / 2];
+		int j = 0;
+		for (int i = 0; i < b.length; i++) {
+			char c0 = hexstr.charAt(j++);
+			char c1 = hexstr.charAt(j++);
+			b[i] = (byte) ((parse(c0) << 4) | parse(c1));
+		}
+		return b;
+	}
+
+	/** 
+	 * 加密数据
+	 * @param data 待加密数据
+	 * @param key 密钥
+	 * @return 加密后的数据 
+	 */
+	public static String encrypt(String data, String key) throws Exception {
+		Key deskey = keyGenerator(key);
+		// 实例化Cipher对象，它用于完成实际的加密操作
+		Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+		SecureRandom random = new SecureRandom();
+		// 初始化Cipher对象，设置为加密模式
+		cipher.init(Cipher.ENCRYPT_MODE, deskey, random);
+		byte[] results = cipher.doFinal(data.getBytes("UTF-8"));
+		// 执行加密操作。加密后的结果通常都会用Base64编码进行传输
+		return Base64.encodeBase64String(results);
+	}
+
+	/** 
+	 * 解密数据 
+	 * @param data 待解密数据 
+	 * @param key 密钥 
+	 * @return 解密后的数据 
+	 */
+	public static String decrypt(String data, String key) throws Exception {
+		Key deskey = keyGenerator(key);
+		Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+		// 初始化Cipher对象，设置为解密模式
+		cipher.init(Cipher.DECRYPT_MODE, deskey);
+		// 执行解密操作
+		return new String(cipher.doFinal(Base64.decodeBase64(data)));
+	}
+
+	public static void main(String[] args) throws Exception {
+		String data = args[0];
+		System.out.println("input:" + data);
+		String encryptData1 = encrypt(data, DES_KEY);
+		System.out.println("加密后: " + encryptData1);
+		System.out.println("加密后: " + URLEncoder.encode(encryptData1, "UTF-8"));
+		String decryptData1 = decrypt(encryptData1, DES_KEY);
+		System.out.println("解密后: " + decryptData1);
+		// Scanner input = new Scanner(System.in);
+		/*
+		 * while(true){ System.out.println("请选择操作：1.加密。2.解密。3.退出"); int cmd =
+		 * input.nextInt(); if(cmd == 1){ System.out.println("请输入明文: " ); String
+		 * source = input.next(); String encryptData = encrypt(source, key);
+		 * System.out.println("加密后: " + encryptData); }else if(cmd == 2){
+		 * System.out.println("请输入密文: " ); String encryptData = input.next();
+		 * String decryptData = decrypt(encryptData, key);
+		 * System.out.println("解密后: " + decryptData); }else if(cmd == 3){
+		 * System.out.println("bye!"); break; } }
+		 */
+
+		System.out.println(decrypt("mOwnagdOV4jEFdqctNLdog==", "k38d81C!@#dkro22232JAMDGIJGDSe48dk>KUY%%$"));
+	}
+}
